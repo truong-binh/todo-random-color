@@ -3,14 +3,16 @@ import React, { useState } from 'react';
 function TodoList() {
     const [tasks, setTasks] = useState([]);
     const [task, setTask] = useState('');
-    const [editIndex, setEditIndex] = useState(null); // Thêm biến để lưu chỉ số việc cần sửa
+    const [editIndex, setEditIndex] = useState(null);
 
     const addTask = () => {
         if (editIndex !== null) {
-            const newTasks = [...tasks];
-            newTasks[editIndex].text = task; // Cập nhật việc cần sửa
-            setTasks(newTasks);
-            setEditIndex(null); // Đặt lại chỉ số sửa
+            if (editIndex < tasks.length) {
+                const newTasks = [...tasks];
+                newTasks[editIndex].text = task;
+                setTasks(newTasks);
+            }
+            setEditIndex(null);
         } else {
             setTasks([...tasks, { text: task, completed: false }]);
         }
@@ -18,8 +20,10 @@ function TodoList() {
     };
 
     const editTask = (index) => {
-        setTask(tasks[index].text); // Đặt giá trị ô nhập để sửa
-        setEditIndex(index); // Lưu chỉ số việc cần sửa
+        if (index < tasks.length) {
+            setTask(tasks[index].text);
+            setEditIndex(index);
+        }
     };
 
     const toggleTask = (index) => {
@@ -31,19 +35,33 @@ function TodoList() {
     const deleteTask = (index) => {
         const newTasks = tasks.filter((_, i) => i !== index);
         setTasks(newTasks);
+        if (editIndex === index) {
+            setEditIndex(null);
+            setTask('');
+        } else if (editIndex !== null && index < editIndex) {
+            setEditIndex(editIndex - 1);
+        }
     };
 
     return (
         <div>
-            <h2>Todo List</h2>
-            <input value={task} onChange={(e) => setTask(e.target.value)} />
-            <button onClick={addTask}>{editIndex !== null ? 'Sửa' : 'Thêm'}</button> {/* Thay đổi nút */}
+            <h2>Danh sách công việc</h2>
+            <input 
+                value={task} 
+                onChange={(e) => setTask(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addTask()}
+            />
+            <button onClick={addTask}>{editIndex !== null ? 'Sửa' : 'Thêm'}</button>
             <ul>
                 {tasks.map((t, index) => (
                     <li key={index} style={{ textDecoration: t.completed ? 'line-through' : 'none' }}>
-                        <input type="checkbox" checked={t.completed} onChange={() => toggleTask(index)} />
+                        <input 
+                            type="checkbox" 
+                            checked={t.completed} 
+                            onChange={() => toggleTask(index)} 
+                        />
                         {t.text}
-                        <button onClick={() => editTask(index)}>Sửa</button> {/* Nút sửa */}
+                        <button onClick={() => editTask(index)}>Sửa</button>
                         <button onClick={() => deleteTask(index)}>Xóa</button>
                     </li>
                 ))}
